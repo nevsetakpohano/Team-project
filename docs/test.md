@@ -148,20 +148,20 @@ export default router;
 
 - POST
 
-![](images/post.png)
+![](images/post.jpg)
 
 - GET ALL
 
-![](images/getAll.png)
+![](images/getAll.jpg)
 
 - GET BY ID
 
-![](images/get.png)
+![](images/get.jpg)
 
 - PUT
 
-![](images/put.png)
+![](images/put.jpg)
 
 - DELETE
 
-![](images/delete.png)
+![](images/delete.jpg)
