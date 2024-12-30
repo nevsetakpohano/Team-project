@@ -148,7 +148,7 @@ export default router;
 
 - POST
 
-//![](images/post.png)
+![](images/post.png)
 
 - GET ALL
 
