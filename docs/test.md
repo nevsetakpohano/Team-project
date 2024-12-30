@@ -1,34 +1,167 @@
 # Тестування працездатності системи
+Розробка CRUD-сервісу для управління нашою базою даних
 
-### Тестування за допомогою POSTMAN
+#### Вихідні коди програми
+- server.js
 
-### Запуск сервера
+```javascript
+import express from "express";
+import bodyParser from "body-parser";
+import contentRoutes from "./routes/contentRoutes.js";
+import db from "./config/db.js";
 
-![image](https://github.com/user-attachments/assets/ba0a9a7b-0e50-4f5c-bb03-260b1e03a447)
+const app = express();
+const PORT = 3000;
 
-### GET Single admin
-![image](https://github.com/user-attachments/assets/04c020f7-ec1e-4e8e-8366-57f78402207e)
+app.use(bodyParser.json());
 
-### GET All admins
-![image](https://github.com/user-attachments/assets/4580aeaa-3c0f-4c96-b459-1158af12d002)
+app.use("/api/contents", contentRoutes);
 
-### GET wrong admin 
-![image](https://github.com/user-attachments/assets/e3ae821f-011d-42b4-b93b-f98e7da5ff78)
+app.listen(PORT, () => {
+  console.log(`Сервер запущено на http://localhost:${PORT}`);
+});
+```
+- config/db.js
 
-### POST Add new admin
-![image](https://github.com/user-attachments/assets/4877d07a-d97d-4611-93b0-89a8117eb8f1)
+```javascript
+import mysql from "mysql2";
 
-### POST Add new admin with wrong parameters
-![image](https://github.com/user-attachments/assets/e48de2fb-808b-4a32-a320-54928f6100a7)
+const db = mysql.createConnection({
+  host: "localhost", 
+  user: "root",
+  password: "Nekakvcegda_0",
+  database: "databaseLab5",
+});
 
-### PUT Update admin
-![image](https://github.com/user-attachments/assets/2af15208-171a-4fa0-82e0-28d102a2d001)
+db.connect((err) => {
+  if (err) {
+    console.error("Помилка підключення до бази даних:", err);
+    process.exit(1); 
+  }
+  console.log("Підключення до бази даних встановлено!");
+});
 
-### PUT Update non existing admin 
-![image](https://github.com/user-attachments/assets/25e779ec-2a72-4a7c-bdc9-595781771734)
+export default db;
 
-### DELETE Single admin
-![image](https://github.com/user-attachments/assets/e8a82de5-c88e-49b9-8d5b-53aede3275a1)
+```
 
-### DELETE Admin with wrong id
-![image](https://github.com/user-attachments/assets/5298f6dc-0448-4b8d-ac19-6646608c68fe)
+- controllers/contentController.js
+
+```javascript
+import db from "../config/db.js";
+
+export const getContents = (req, res) => {
+  const query = "SELECT * FROM Content";
+  db.query(query, (err, results) => {
+    if (err) {
+      res.status(500).json({ error: "Помилка отримання даних", details: err });
+    } else {
+      res.status(200).json(results);
+    }
+  });
+};
+
+export const getContentById = (req, res) => {
+  const { id } = req.params;
+  const query = "SELECT * FROM Content WHERE id = ?";
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: "Помилка отримання даних", details: err });
+    } else if (result.length === 0) {
+      res.status(404).json({ message: "Запис не знайдено" });
+    } else {
+      res.status(200).json(result[0]);
+    }
+  });
+};
+
+export const createContent = (req, res) => {
+  const { type, form_id } = req.body;
+  const query = "INSERT INTO Content (type, Form_id) VALUES (?, ?)";
+  db.query(query, [type, form_id], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: "Помилка створення запису", details: err });
+    } else {
+      res.status(201).json({
+        message: "Запис успішно створено",
+        contentId: result.insertId,
+      });
+    }
+  });
+};
+
+export const updateContent = (req, res) => {
+  const { id } = req.params;
+  const { type, form_id } = req.body;
+  const query = "UPDATE Content SET type = ?, Form_id = ? WHERE id = ?";
+  db.query(query, [type, form_id, id], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: "Помилка оновлення запису", details: err });
+    } else if (result.affectedRows === 0) {
+      res.status(404).json({ message: "Запис не знайдено" });
+    } else {
+      res.status(200).json({ message: "Запис успішно оновлено" });
+    }
+  });
+};
+
+export const deleteContent = (req, res) => {
+  const { id } = req.params;
+  const query = "DELETE FROM Content WHERE id = ?";
+  db.query(query, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ error: "Помилка видалення запису", details: err });
+    } else if (result.affectedRows === 0) {
+      res.status(404).json({ message: "Запис не знайдено" });
+    } else {
+      res.status(200).json({ message: "Запис успішно видалено" });
+    }
+  });
+};
+
+```
+
+- routes/contentRoutes.js
+
+```javascript
+import express from "express";
+import {
+  getContents,
+  getContentById,
+  createContent,
+  updateContent,
+  deleteContent,
+} from "../controllers/contentController.js";
+
+const router = express.Router();
+
+router.get("/", getContents); 
+router.get("/:id", getContentById);
+router.post("/", createContent);
+router.put("/:id", updateContent);
+router.delete("/:id", deleteContent);
+
+export default router;
+```
+
+### Тестування за допомогою Thunder Client
+
+- POST
+
+//![](images/post.png)
+
+- GET ALL
+
+![](images/getAll.png)
+
+- GET BY ID
+
+![](images/get.png)
+
+- PUT
+
+![](images/put.png)
+
+- DELETE
+
+![](images/delete.png)
